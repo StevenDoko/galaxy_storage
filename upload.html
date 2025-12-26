@@ -237,10 +237,8 @@ body.light .modal-box {
 const SUPABASE_URL = "https://ajibakkrxavmyzyolbbw.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqaWJha2tyeGF2bXl6eW9sYmJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY3Mzk2ODMsImV4cCI6MjA4MjMxNTY4M30.-A-wkQZtRTl8qNiWe2yyWkKt6WbtYYtYTA_KWlhEtQw";
 
-const supabase = supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-);
+// Inisialisasi Client
+const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const usernameEl = document.getElementById("username");
 const fileList = document.getElementById("fileList");
@@ -250,7 +248,8 @@ let currentUser = null;
 
 /* ================= AUTH CHECK ================= */
 (async () => {
-    const { data } = await supabase.auth.getUser();
+    // PERBAIKAN: Gunakan sbClient
+    const { data } = await sbClient.auth.getUser(); 
     if (!data.user) {
         location.href = "login.html";
         return;
@@ -263,7 +262,8 @@ let currentUser = null;
 
 /* ================= LIST FILE ================= */
 async function loadFiles() {
-    const { data } = await supabase
+    // PERBAIKAN: Gunakan sbClient
+    const { data } = await sbClient
         .storage
         .from("files")
         .list(currentUser.id);
@@ -280,7 +280,8 @@ async function loadFiles() {
 
             const link = document.createElement("a");
             link.textContent = "⬇ Download";
-            link.href = supabase.storage
+            // PERBAIKAN: Gunakan sbClient
+            link.href = sbClient.storage
                 .from("files")
                 .getPublicUrl(`${currentUser.id}/${file.name}`)
                 .data.publicUrl;
@@ -302,14 +303,10 @@ async function uploadFile() {
         return;
     }
 
-    if (!currentUser) {
-        alert("User belum login");
-        return;
-    }
-
     const filePath = `${currentUser.id}/${Date.now()}-${file.name}`;
 
-    const { data, error } = await supabase.storage
+    // Gunakan sbClient
+    const { data, error } = await sbClient.storage 
         .from("files")
         .upload(filePath, file, {
             cacheControl: "3600",
@@ -317,7 +314,6 @@ async function uploadFile() {
         });
 
     if (error) {
-        console.error("UPLOAD ERROR:", error);
         uploadMessage.textContent = "❌ " + error.message;
         return;
     }
@@ -329,8 +325,13 @@ async function uploadFile() {
 
 /* ================= LOGOUT ================= */
 window.logout = async () => {
-    await supabase.auth.signOut();
-    location.href = "index.html";
+    // Gunakan sbClient
+    const { error } = await sbClient.auth.signOut(); 
+    if (error) {
+        alert("Gagal logout: " + error.message);
+    } else {
+        location.href = "login.html"; 
+    }
 };
 </script>
 
