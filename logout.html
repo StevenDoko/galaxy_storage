@@ -1,12 +1,17 @@
 <script type="module">
 import { supabase } from "./supabase.js";
 
-window.logout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-        alert("Gagal logout: " + error.message);
-        return;
-    }
-    window.location.href = "login.html";
-};
+const btnLogout = document.getElementById("btnLogout");
+
+if (btnLogout) {
+    btnLogout.addEventListener("click", async () => {
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+            alert("Gagal logout: " + error.message);
+        } else {
+            // Gunakan replace agar user tidak bisa klik "back" ke halaman dashboard
+            window.location.replace("login.html");
+        }
+    });
+}
 </script>
