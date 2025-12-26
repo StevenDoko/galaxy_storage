@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - My Cloud</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap');
 
@@ -54,6 +53,7 @@
             text-decoration: none;
             font-size: 14px;
             font-weight: 600;
+            cursor: pointer;
         }
 
         .theme-toggle {
@@ -109,13 +109,6 @@
             font-family: inherit;
         }
 
-        .file-preview img {
-            max-height: 70px;
-            margin-top: 8px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,120,255,0.4);
-        }
-
         /* MODAL */
         .modal {
             display: none;
@@ -134,45 +127,30 @@
             padding: 20px;
             border-radius: 12px;
             text-align: center;
-            border: 1px solid rgba(0,120,255,0.3);
         }
 
         .actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
+            display: flex; gap: 10px; margin-top: 15px;
         }
 
         .actions button {
-            flex: 1;
-            padding: 10px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 12px;
+            flex: 1; padding: 10px; border-radius: 8px; border: none; cursor: pointer; font-family: 'Orbitron', sans-serif;
         }
 
-        .actions .confirm {
-            background: #ff0055;
-            color: white;
-        }
+        .actions .confirm { background: #ff0055; color: white; }
 
-        /* LIGHT MODE */
         body.light { background: #eaf2ff; color: #0f172a; }
-        body.light::before { opacity: 0.12; }
         body.light .box, body.light .card { background: rgba(255,255,255,0.75); color: #0f172a; }
-        body.light .file-item { background: rgba(200,220,255,0.8); color: #0f172a; }
+        body.light .file-item { background: rgba(200,220,255,0.8); }
     </style>
 </head>
-
 <body>
 
 <div class="header">
     <h2>🌌 Halo, <span id="username">User</span></h2>
     <div class="header-right">
         <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
-        <a href="javascript:void(0)" onclick="openLogoutModal()">Logout</a>
+        <a onclick="openLogoutModal()">Logout</a>
     </div>
 </div>
 
@@ -182,9 +160,9 @@
         <input type="file" id="fileInput" hidden onchange="previewFile(this)">
         Klik pilih file
     </label>
-    <div id="filePreview" class="file-preview"></div>
+    <div id="filePreview" style="margin-top: 10px; font-size: 12px;"></div>
     <button class="btn-upload" onclick="uploadFile()">🚀 Upload</button>
-    <p id="uploadMessage"></p>
+    <p id="uploadMessage" style="font-size: 12px;"></p>
 </div>
 
 <div class="box">
@@ -204,9 +182,10 @@
 </div>
 
 <script>
-<script>
+// KONFIGURASI
 const SUPABASE_URL = "https://ajibakkrxavmyzyolbbw.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqaWJha2tyeGF2bXl6eW9sYmJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY3Mzk2ODMsImV4cCI6MjA4MjMxNTY4M30.-A-wkQZtRTl8qNiWe2yyWkKt6WbtYYtYTA_KWlhEtQw";
+const BUCKET_NAME = "uploads"; // NAMA BUCKET KAMU
 
 const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -216,43 +195,96 @@ const uploadMessage = document.getElementById("uploadMessage");
 
 let currentUser = null;
 
-/* ================= INITIALIZE (THEME & AUTH) ================= */
-// Gabungkan semua fungsi yang harus jalan saat start di sini
+// INITIALIZE DASHBOARD
 (async () => {
-    // 1. Cek Tema
+    // Cek Tema
     if (localStorage.getItem("theme") === "light") {
         document.body.classList.add("light");
         document.querySelector(".theme-toggle").innerHTML = "☀️";
     }
 
-    // 2. Cek Auth
-    const { data } = await sbClient.auth.getUser(); 
-    if (!data.user) {
+    // Cek User
+    const { data: { user } } = await sbClient.auth.getUser();
+    if (!user) {
         window.location.replace("login.html");
         return;
     }
 
-    currentUser = data.user;
+    currentUser = user;
     
-    // 3. Tampilkan Nama (Prioritas: Username Metadata -> Email)
-    const displayName = currentUser.user_metadata?.username || currentUser.email;
-    usernameEl.textContent = displayName;
+    // Tampilkan Nama dari Metadata
+    const name = currentUser.user_metadata?.username || currentUser.email;
+    usernameEl.textContent = name;
 
-    // 4. Load Data
     loadFiles();
 })();
 
-/* ================= LOGOUT ================= */
-// Gunakan cara ini agar fungsi terbaca secara global oleh HTML
+// FUNGSI STORAGE
+async function loadFiles() {
+    const { data, error } = await sbClient.storage.from(BUCKET_NAME).list(currentUser.id);
+    
+    fileList.innerHTML = "";
+    if (error) {
+        fileList.innerHTML = "<li>Gagal memuat file: " + error.message + "</li>";
+        return;
+    }
+
+    if (data.length === 0) {
+        fileList.innerHTML = "<p style='opacity:0.5'>Belum ada file.</p>";
+        return;
+    }
+
+    data.forEach(file => {
+        const publicUrl = sbClient.storage.from(BUCKET_NAME).getPublicUrl(`${currentUser.id}/${file.name}`).data.publicUrl;
+        const li = document.createElement("li");
+        li.className = "file-item";
+        li.innerHTML = `
+            <span>${file.name}</span>
+            <div>
+                <a href="${publicUrl}" target="_blank" style="text-decoration:none; margin-right:15px;">⬇️</a>
+                <button onclick="deleteFile('${file.name}')" style="background:none; border:none; cursor:pointer;">🗑️</button>
+            </div>
+        `;
+        fileList.appendChild(li);
+    });
+}
+
+async function uploadFile() {
+    const input = document.getElementById("fileInput");
+    const file = input.files[0];
+    if (!file) return alert("Pilih file dulu!");
+
+    uploadMessage.textContent = "⏳ Mengupload...";
+    const filePath = `${currentUser.id}/${Date.now()}-${file.name}`;
+    
+    const { error } = await sbClient.storage.from(BUCKET_NAME).upload(filePath, file);
+
+    if (error) {
+        uploadMessage.textContent = "❌ " + error.message;
+    } else {
+        uploadMessage.textContent = "✅ Berhasil!";
+        input.value = "";
+        document.getElementById("filePreview").innerHTML = "";
+        loadFiles();
+    }
+}
+
+async function deleteFile(name) {
+    if (!confirm("Hapus file ini?")) return;
+    const { error } = await sbClient.storage.from(BUCKET_NAME).remove([`${currentUser.id}/${name}`]);
+    if (error) alert("Gagal: " + error.message);
+    else loadFiles();
+}
+
+// UI HELPERS
 window.logout = async () => {
-    await sbClient.auth.signOut(); 
-    window.location.replace("login.html"); 
+    await sbClient.auth.signOut();
+    window.location.replace("login.html");
 };
 
-window.openLogoutModal = () => { document.getElementById("logoutModal").style.display = "block"; };
-window.closeLogoutModal = () => { document.getElementById("logoutModal").style.display = "none"; };
+window.openLogoutModal = () => document.getElementById("logoutModal").style.display = "block";
+window.closeLogoutModal = () => document.getElementById("logoutModal").style.display = "none";
 
-/* ================= THEME ================= */
 window.toggleTheme = () => {
     document.body.classList.toggle("light");
     const isLight = document.body.classList.contains("light");
@@ -260,97 +292,10 @@ window.toggleTheme = () => {
     document.querySelector(".theme-toggle").innerHTML = isLight ? "☀️" : "🌙";
 };
 
-/* ================= STORAGE FUNCTIONS ================= */
-async function loadFiles() {
-    if(!currentUser) return;
-    const { data, error } = await sbClient.storage.from("files").list(currentUser.id);
-    fileList.innerHTML = "";
-    if (data) {
-        data.forEach(file => {
-            const publicUrl = sbClient.storage.from("files").getPublicUrl(`${currentUser.id}/${file.name}`).data.publicUrl;
-            const li = document.createElement("li");
-            li.className = "file-item";
-            li.innerHTML = `
-                <span>${file.name}</span>
-                <div>
-                    <a href="${publicUrl}" target="_blank">⬇️</a>
-                    <button onclick="deleteFile('${file.name}')" style="background:none; border:none; cursor:pointer; margin-left:10px;">🗑️</button>
-                </div>`;
-            fileList.appendChild(li);
-        });
-    }
-}
-
-async function uploadFile() {
-    const input = document.getElementById("fileInput");
-    const file = input.files[0];
-    if (!file) return alert("Pilih file!");
-
-    uploadMessage.textContent = "⏳ Uploading...";
-    const filePath = `${currentUser.id}/${Date.now()}-${file.name}`;
-    const { error } = await sbClient.storage.from("files").upload(filePath, file);
-
-    if (error) {
-        uploadMessage.textContent = "❌ " + error.message;
-    } else {
-        uploadMessage.textContent = "✅ Sukses";
-        input.value = "";
-        loadFiles();
-    }
-}
-
-async function deleteFile(fileName) {
-    if (!confirm("Hapus file?")) return;
-    await sbClient.storage.from("files").remove([`${currentUser.id}/${fileName}`]);
-    loadFiles();
-}
-
 function previewFile(input) {
     const preview = document.getElementById("filePreview");
-    preview.innerHTML = input.files[0] ? "📎 " + input.files[0].name : "";
+    preview.textContent = input.files[0] ? "📎 " + input.files[0].name : "";
 }
 </script>
-
-/* ================= LOGOUT ================= */
-window.logout = async () => {
-    await sbClient.auth.signOut(); 
-    window.location.replace("login.html"); 
-};
-
-/* ================= UI HELPERS ================= */
-function previewFile(input) {
-    const file = input.files[0];
-    const preview = document.getElementById("filePreview");
-    preview.innerHTML = "";
-
-    if (file) {
-        if (file.type.startsWith("image/")) {
-            const img = document.createElement("img");
-            img.src = URL.createObjectURL(file);
-            preview.appendChild(img);
-        } else {
-            preview.textContent = "📎 " + file.name;
-        }
-    }
-}
-
-function openLogoutModal() { document.getElementById("logoutModal").style.display = "block"; }
-function closeLogoutModal() { document.getElementById("logoutModal").style.display = "none"; }
-
-function toggleTheme() {
-    document.body.classList.toggle("light");
-    const isLight = document.body.classList.contains("light");
-    localStorage.setItem("theme", isLight ? "light" : "dark");
-    document.querySelector(".theme-toggle").innerHTML = isLight ? "☀️" : "🌙";
-}
-
-window.onload = () => {
-    if (localStorage.getItem("theme") === "light") {
-        document.body.classList.add("light");
-        document.querySelector(".theme-toggle").innerHTML = "☀️";
-    }
-};
-</script>
-
 </body>
 </html>
