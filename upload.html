@@ -204,6 +204,7 @@
 </div>
 
 <script>
+<script>
 const SUPABASE_URL = "https://ajibakkrxavmyzyolbbw.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqaWJha2tyeGF2bXl6eW9sYmJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY3Mzk2ODMsImV4cCI6MjA4MjMxNTY4M30.-A-wkQZtRTl8qNiWe2yyWkKt6WbtYYtYTA_KWlhEtQw";
 
@@ -215,99 +216,100 @@ const uploadMessage = document.getElementById("uploadMessage");
 
 let currentUser = null;
 
-/* ================= AUTH CHECK ================= */
+/* ================= INITIALIZE (THEME & AUTH) ================= */
+// Gabungkan semua fungsi yang harus jalan saat start di sini
 (async () => {
+    // 1. Cek Tema
+    if (localStorage.getItem("theme") === "light") {
+        document.body.classList.add("light");
+        document.querySelector(".theme-toggle").innerHTML = "☀️";
+    }
+
+    // 2. Cek Auth
     const { data } = await sbClient.auth.getUser(); 
     if (!data.user) {
-        location.href = "login.html";
+        window.location.replace("login.html");
         return;
     }
 
     currentUser = data.user;
     
-    // Menampilkan username dari metadata atau fallback ke email
+    // 3. Tampilkan Nama (Prioritas: Username Metadata -> Email)
     const displayName = currentUser.user_metadata?.username || currentUser.email;
     usernameEl.textContent = displayName;
 
+    // 4. Load Data
     loadFiles();
 })();
 
-/* ================= LIST FILE ================= */
+/* ================= LOGOUT ================= */
+// Gunakan cara ini agar fungsi terbaca secara global oleh HTML
+window.logout = async () => {
+    await sbClient.auth.signOut(); 
+    window.location.replace("login.html"); 
+};
+
+window.openLogoutModal = () => { document.getElementById("logoutModal").style.display = "block"; };
+window.closeLogoutModal = () => { document.getElementById("logoutModal").style.display = "none"; };
+
+/* ================= THEME ================= */
+window.toggleTheme = () => {
+    document.body.classList.toggle("light");
+    const isLight = document.body.classList.contains("light");
+    localStorage.setItem("theme", isLight ? "light" : "dark");
+    document.querySelector(".theme-toggle").innerHTML = isLight ? "☀️" : "🌙";
+};
+
+/* ================= STORAGE FUNCTIONS ================= */
 async function loadFiles() {
-    const { data, error } = await sbClient.storage
-        .from("files")
-        .list(currentUser.id);
-
+    if(!currentUser) return;
+    const { data, error } = await sbClient.storage.from("files").list(currentUser.id);
     fileList.innerHTML = "";
-
-    if (error) {
-        console.error("Error loading files:", error.message);
-        return;
-    }
-
-    if (data && data.length > 0) {
+    if (data) {
         data.forEach(file => {
-            const publicUrl = sbClient.storage
-                .from("files")
-                .getPublicUrl(`${currentUser.id}/${file.name}`).data.publicUrl;
-
+            const publicUrl = sbClient.storage.from("files").getPublicUrl(`${currentUser.id}/${file.name}`).data.publicUrl;
             const li = document.createElement("li");
             li.className = "file-item";
             li.innerHTML = `
-                <span style="word-break: break-all; margin-right: 10px;">${file.name}</span>
-                <div style="display: flex; gap: 15px; align-items: center;">
-                    <a href="${publicUrl}" target="_blank" style="color: #7bbcff; text-decoration: none;">⬇</a>
-                    <button onclick="deleteFile('${file.name}')" style="background:none; border:none; cursor:pointer; font-size:16px;">🗑️</button>
-                </div>
-            `;
+                <span>${file.name}</span>
+                <div>
+                    <a href="${publicUrl}" target="_blank">⬇️</a>
+                    <button onclick="deleteFile('${file.name}')" style="background:none; border:none; cursor:pointer; margin-left:10px;">🗑️</button>
+                </div>`;
             fileList.appendChild(li);
         });
-    } else {
-        fileList.innerHTML = "<p style='opacity:0.6'>Belum ada file.</p>";
     }
 }
 
-/* ================= UPLOAD ================= */
 async function uploadFile() {
     const input = document.getElementById("fileInput");
     const file = input.files[0];
+    if (!file) return alert("Pilih file!");
 
-    if (!file) {
-        alert("Pilih file terlebih dahulu");
-        return;
-    }
-
-    uploadMessage.textContent = "⏳ Sedang mengupload...";
+    uploadMessage.textContent = "⏳ Uploading...";
     const filePath = `${currentUser.id}/${Date.now()}-${file.name}`;
-
-    const { error } = await sbClient.storage 
-        .from("files")
-        .upload(filePath, file);
+    const { error } = await sbClient.storage.from("files").upload(filePath, file);
 
     if (error) {
         uploadMessage.textContent = "❌ " + error.message;
     } else {
-        uploadMessage.textContent = "✅ Berhasil diupload";
+        uploadMessage.textContent = "✅ Sukses";
         input.value = "";
-        document.getElementById("filePreview").innerHTML = "";
         loadFiles();
     }
 }
 
-/* ================= DELETE ================= */
 async function deleteFile(fileName) {
-    if (!confirm(`Hapus file "${fileName}"?`)) return;
-
-    const { error } = await sbClient.storage
-        .from("files")
-        .remove([`${currentUser.id}/${fileName}`]);
-
-    if (error) {
-        alert("Gagal menghapus: " + error.message);
-    } else {
-        loadFiles();
-    }
+    if (!confirm("Hapus file?")) return;
+    await sbClient.storage.from("files").remove([`${currentUser.id}/${fileName}`]);
+    loadFiles();
 }
+
+function previewFile(input) {
+    const preview = document.getElementById("filePreview");
+    preview.innerHTML = input.files[0] ? "📎 " + input.files[0].name : "";
+}
+</script>
 
 /* ================= LOGOUT ================= */
 window.logout = async () => {
