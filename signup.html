@@ -227,6 +227,7 @@ form.addEventListener("submit", async (e) => {
         errorBox.style.display = "block";
         errorBox.textContent = error.message;
     } else {
+        await supabase.auth.signOut();
         alert("Akun berhasil dibuat! Silakan login.");
         window.location.href = "login.html";
     }
