@@ -243,6 +243,9 @@ const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const usernameEl = document.getElementById("username");
 const fileList = document.getElementById("fileList");
 const uploadMessage = document.getElementById("uploadMessage");
+    
+// Gunakan ?. agar tidak error jika user_metadata null
+const displayName = currentUser.user_metadata?.username || currentUser.email;
 
 let currentUser = null;
 
