@@ -248,7 +248,6 @@ let currentUser = null;
 
 /* ================= AUTH CHECK ================= */
 (async () => {
-    // PERBAIKAN: Gunakan sbClient
     const { data } = await sbClient.auth.getUser(); 
     if (!data.user) {
         location.href = "login.html";
@@ -256,7 +255,12 @@ let currentUser = null;
     }
 
     currentUser = data.user;
-    usernameEl.textContent = currentUser.email;
+
+    // PERBAIKAN DI SINI:
+    // Ambil username dari user_metadata, jika tidak ada baru tampilkan email
+    const displayName = currentUser.user_metadata.username || currentUser.email;
+    usernameEl.textContent = displayName;
+
     loadFiles();
 })();
 
