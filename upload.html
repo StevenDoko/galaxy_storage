@@ -325,12 +325,12 @@ async function uploadFile() {
 
 /* ================= LOGOUT ================= */
 window.logout = async () => {
-    // Gunakan sbClient
     const { error } = await sbClient.auth.signOut(); 
     if (error) {
         alert("Gagal logout: " + error.message);
     } else {
-        location.href = "login.html"; 
+        // Gunakan replace agar user tidak bisa kembali ke dashboard dengan tombol 'Back'
+        window.location.replace("login.html"); 
     }
 };
 </script>
