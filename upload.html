@@ -1,194 +1,169 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard - My Cloud</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - My Cloud</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap');
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap');
 
-body {
-    font-family: 'Orbitron', sans-serif;
-    margin: 0;
-    padding: 20px;
-    color: #d8eaff;
-    background: #03030a;
-    overflow-x: hidden;
-}
+        body {
+            font-family: 'Orbitron', sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #d8eaff;
+            background: #03030a;
+            overflow-x: hidden;
+            transition: background 0.3s, color 0.3s;
+        }
 
-body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background: url('NGC-5033-by-R.-Jay-GaBany.jpg') center/cover no-repeat fixed;
-    opacity: 0.35;
-    animation: moveStars 90s linear infinite;
-    pointer-events: none;
-}
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: url('NGC-5033-by-R.-Jay-GaBany.jpg') center/cover no-repeat fixed;
+            opacity: 0.35;
+            animation: moveStars 90s linear infinite;
+            pointer-events: none;
+            z-index: -1;
+        }
 
-@keyframes moveStars {
-    from { background-position: 0 0; }
-    to { background-position: -3000px -3000px; }
-}
+        @keyframes moveStars {
+            from { background-position: 0 0; }
+            to { background-position: -3000px -3000px; }
+        }
 
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 900px;
-    margin: auto;
-}
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 900px;
+            margin: auto;
+        }
 
-.header-right {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-}
+        .header-right {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
 
-.header a {
-    color: #7bbcff;
-    text-decoration: none;
-}
+        .header a {
+            color: #ff4d4d;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
 
-.theme-toggle {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 1px solid #3b82f6;
-    background: rgba(20,35,70,0.6);
-    color: #d8eaff;
-    font-size: 18px;
-    cursor: pointer;
-}
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid #3b82f6;
+            background: rgba(20,35,70,0.6);
+            color: #d8eaff;
+            font-size: 18px;
+            cursor: pointer;
+        }
 
-.box, .card {
-    max-width: 900px;
-    margin: 30px auto;
-    background: rgba(12,20,40,0.6);
-    padding: 20px;
-    border-radius: 16px;
-    box-shadow: 0 0 25px rgba(0,100,255,0.25);
-    backdrop-filter: blur(10px);
-}
+        .box, .card {
+            max-width: 900px;
+            margin: 30px auto;
+            background: rgba(12,20,40,0.6);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 0 25px rgba(0,100,255,0.25);
+            backdrop-filter: blur(10px);
+        }
 
-.file-item {
-    list-style: none;
-    background: rgba(20,35,70,0.55);
-    margin: 12px 0;
-    padding: 14px 18px;
-    border-radius: 10px;
-    display: flex;
-    justify-content: space-between;
-}
+        .file-item {
+            list-style: none;
+            background: rgba(20,35,70,0.55);
+            margin: 12px 0;
+            padding: 14px 18px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-.file-drop {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 56px;
-    border: 2px dashed #3b82f6;
-    border-radius: 10px;
-    cursor: pointer;
-}
+        .file-drop {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 56px;
+            border: 2px dashed #3b82f6;
+            border-radius: 10px;
+            cursor: pointer;
+        }
 
-.btn-upload {
-    margin-top: 12px;
-    padding: 10px 18px;
-    border-radius: 10px;
-    border: none;
-    background: linear-gradient(90deg,#0040ff,#8800ff);
-    color: white;
-    cursor: pointer;
-}
+        .btn-upload {
+            margin-top: 12px;
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(90deg,#0040ff,#8800ff);
+            color: white;
+            cursor: pointer;
+            font-family: inherit;
+        }
 
-/* FILE PREVIEW */
-.file-preview {
-    margin-top: 10px;
-    font-size: 13px;
-    color: #cbd5e1;
-}
-.file-preview img {
-    max-height: 70px;
-    margin-top: 8px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0,120,255,0.4);
-}
+        .file-preview img {
+            max-height: 70px;
+            margin-top: 8px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,120,255,0.4);
+        }
 
-/* MODAL */
-.modal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    backdrop-filter: blur(6px);
-    z-index: 999;
-}
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(6px);
+            z-index: 999;
+        }
 
-.modal-box {
-    background: #0c1428;
-    color: #d8eaff;
-    max-width: 300px;
-    margin: 30vh auto;
-    padding: 20px;
-    border-radius: 12px;
-    text-align: center;
-}
+        .modal-box {
+            background: #0c1428;
+            color: #d8eaff;
+            max-width: 300px;
+            margin: 30vh auto;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(0,120,255,0.3);
+        }
 
-.actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 15px;
-}
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
 
-.actions button,
-.actions a {
-    flex: 1;
-    height: 40px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    text-decoration: none;
+        .actions button {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+        }
 
-    display: flex;              /* supaya teks bisa center vertikal */
-    align-items: center;        /* vertikal center */
-    justify-content: center;    /* horizontal center */
-    font-family: 'Orbitron', sans-serif;  /* samakan font */
-    font-weight: 600;           /* optional, kalau mau tebal */
-    font-size: 14px;            /* optional, samakan ukuran */
-}
+        .actions .confirm {
+            background: #ff0055;
+            color: white;
+        }
 
-
-.actions .confirm {
-    background: #ff0055;
-    color: white;
-}
-
-/* LIGHT MODE */
-body.light {
-    background: #eaf2ff;
-    color: #0f172a;
-}
-
-body.light::before { opacity: 0.12; }
-
-body.light .box,
-body.light .card {
-    background: rgba(255,255,255,0.75);
-}
-
-body.light .file-item,
-body.light .file-drop {
-    background: rgba(220,230,255,0.75);
-    color: #0f172a;
-}
-
-body.light .modal-box {
-    background: #f1f5ff;
-    color: #0f172a;
-}
-</style>
+        /* LIGHT MODE */
+        body.light { background: #eaf2ff; color: #0f172a; }
+        body.light::before { opacity: 0.12; }
+        body.light .box, body.light .card { background: rgba(255,255,255,0.75); color: #0f172a; }
+        body.light .file-item { background: rgba(200,220,255,0.8); color: #0f172a; }
+    </style>
 </head>
 
 <body>
@@ -203,16 +178,12 @@ body.light .modal-box {
 
 <div class="card">
     <h3>📤 Upload File</h3>
-
     <label class="file-drop">
         <input type="file" id="fileInput" hidden onchange="previewFile(this)">
         Klik pilih file
     </label>
-
     <div id="filePreview" class="file-preview"></div>
-
     <button class="btn-upload" onclick="uploadFile()">🚀 Upload</button>
-
     <p id="uploadMessage"></p>
 </div>
 
@@ -221,11 +192,10 @@ body.light .modal-box {
     <ul id="fileList"></ul>
 </div>
 
-<!-- LOGOUT MODAL -->
 <div id="logoutModal" class="modal">
     <div class="modal-box">
         <h3>Logout</h3>
-        <p>Yakin ingin keluar dari akun?</p>
+        <p>Yakin ingin keluar?</p>
         <div class="actions">
             <button onclick="closeLogoutModal()">Batal</button>
             <button class="confirm" onclick="logout()">Ya, Logout</button>
@@ -237,15 +207,11 @@ body.light .modal-box {
 const SUPABASE_URL = "https://ajibakkrxavmyzyolbbw.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqaWJha2tyeGF2bXl6eW9sYmJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY3Mzk2ODMsImV4cCI6MjA4MjMxNTY4M30.-A-wkQZtRTl8qNiWe2yyWkKt6WbtYYtYTA_KWlhEtQw";
 
-// Inisialisasi Client
 const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const usernameEl = document.getElementById("username");
 const fileList = document.getElementById("fileList");
 const uploadMessage = document.getElementById("uploadMessage");
-    
-// Gunakan ?. agar tidak error jika user_metadata null
-const displayName = currentUser.user_metadata?.username || currentUser.email;
 
 let currentUser = null;
 
@@ -258,10 +224,9 @@ let currentUser = null;
     }
 
     currentUser = data.user;
-
-    // PERBAIKAN DI SINI:
-    // Ambil username dari user_metadata, jika tidak ada baru tampilkan email
-    const displayName = currentUser.user_metadata.username || currentUser.email;
+    
+    // Menampilkan username dari metadata atau fallback ke email
+    const displayName = currentUser.user_metadata?.username || currentUser.email;
     usernameEl.textContent = displayName;
 
     loadFiles();
@@ -269,34 +234,36 @@ let currentUser = null;
 
 /* ================= LIST FILE ================= */
 async function loadFiles() {
-    // PERBAIKAN: Gunakan sbClient
-    const { data } = await sbClient
-        .storage
+    const { data, error } = await sbClient.storage
         .from("files")
         .list(currentUser.id);
 
     fileList.innerHTML = "";
 
-    if (data) {
+    if (error) {
+        console.error("Error loading files:", error.message);
+        return;
+    }
+
+    if (data && data.length > 0) {
         data.forEach(file => {
+            const publicUrl = sbClient.storage
+                .from("files")
+                .getPublicUrl(`${currentUser.id}/${file.name}`).data.publicUrl;
+
             const li = document.createElement("li");
             li.className = "file-item";
-
-            const span = document.createElement("span");
-            span.textContent = file.name;
-
-            const link = document.createElement("a");
-            link.textContent = "⬇ Download";
-            // PERBAIKAN: Gunakan sbClient
-            link.href = sbClient.storage
-                .from("files")
-                .getPublicUrl(`${currentUser.id}/${file.name}`)
-                .data.publicUrl;
-
-            li.appendChild(span);
-            li.appendChild(link);
+            li.innerHTML = `
+                <span style="word-break: break-all; margin-right: 10px;">${file.name}</span>
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <a href="${publicUrl}" target="_blank" style="color: #7bbcff; text-decoration: none;">⬇</a>
+                    <button onclick="deleteFile('${file.name}')" style="background:none; border:none; cursor:pointer; font-size:16px;">🗑️</button>
+                </div>
+            `;
             fileList.appendChild(li);
         });
+    } else {
+        fileList.innerHTML = "<p style='opacity:0.6'>Belum ada file.</p>";
     }
 }
 
@@ -306,73 +273,73 @@ async function uploadFile() {
     const file = input.files[0];
 
     if (!file) {
-        alert("Pilih file dulu");
+        alert("Pilih file terlebih dahulu");
         return;
     }
 
+    uploadMessage.textContent = "⏳ Sedang mengupload...";
     const filePath = `${currentUser.id}/${Date.now()}-${file.name}`;
 
-    // Gunakan sbClient
-    const { data, error } = await sbClient.storage 
+    const { error } = await sbClient.storage 
         .from("files")
-        .upload(filePath, file, {
-            cacheControl: "3600",
-            upsert: true
-        });
+        .upload(filePath, file);
 
     if (error) {
         uploadMessage.textContent = "❌ " + error.message;
-        return;
+    } else {
+        uploadMessage.textContent = "✅ Berhasil diupload";
+        input.value = "";
+        document.getElementById("filePreview").innerHTML = "";
+        loadFiles();
     }
+}
 
-    uploadMessage.textContent = "✅ Upload berhasil";
-    input.value = "";
-    loadFiles();
+/* ================= DELETE ================= */
+async function deleteFile(fileName) {
+    if (!confirm(`Hapus file "${fileName}"?`)) return;
+
+    const { error } = await sbClient.storage
+        .from("files")
+        .remove([`${currentUser.id}/${fileName}`]);
+
+    if (error) {
+        alert("Gagal menghapus: " + error.message);
+    } else {
+        loadFiles();
+    }
 }
 
 /* ================= LOGOUT ================= */
 window.logout = async () => {
-    const { error } = await sbClient.auth.signOut(); 
-    if (error) {
-        alert("Gagal logout: " + error.message);
-    } else {
-        // Gunakan replace agar user tidak bisa kembali ke dashboard dengan tombol 'Back'
-        window.location.replace("login.html"); 
-    }
+    await sbClient.auth.signOut(); 
+    window.location.replace("login.html"); 
 };
-</script>
 
-<script>
+/* ================= UI HELPERS ================= */
 function previewFile(input) {
     const file = input.files[0];
     const preview = document.getElementById("filePreview");
     preview.innerHTML = "";
 
-    if (file && file.type.startsWith("image/")) {
-        const img = document.createElement("img");
-        img.src = URL.createObjectURL(file);
-        preview.appendChild(img);
-    } else if (file) {
-        preview.textContent = "📎 File siap diupload";
+    if (file) {
+        if (file.type.startsWith("image/")) {
+            const img = document.createElement("img");
+            img.src = URL.createObjectURL(file);
+            preview.appendChild(img);
+        } else {
+            preview.textContent = "📎 " + file.name;
+        }
     }
 }
 
-function openLogoutModal() {
-    document.getElementById("logoutModal").style.display = "block";
-}
-function closeLogoutModal() {
-    document.getElementById("logoutModal").style.display = "none";
-}
+function openLogoutModal() { document.getElementById("logoutModal").style.display = "block"; }
+function closeLogoutModal() { document.getElementById("logoutModal").style.display = "none"; }
 
-/* ================= THEME ================= */
 function toggleTheme() {
     document.body.classList.toggle("light");
-    localStorage.setItem(
-        "theme",
-        document.body.classList.contains("light") ? "light" : "dark"
-    );
-    document.querySelector(".theme-toggle").innerHTML =
-        document.body.classList.contains("light") ? "☀️" : "🌙";
+    const isLight = document.body.classList.contains("light");
+    localStorage.setItem("theme", isLight ? "light" : "dark");
+    document.querySelector(".theme-toggle").innerHTML = isLight ? "☀️" : "🌙";
 }
 
 window.onload = () => {
@@ -385,4 +352,3 @@ window.onload = () => {
 
 </body>
 </html>
-
