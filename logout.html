@@ -1,0 +1,12 @@
+<script type="module">
+import { supabase } from "./supabase.js";
+
+window.logout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+        alert("Gagal logout: " + error.message);
+        return;
+    }
+    window.location.href = "login.html";
+};
+</script>

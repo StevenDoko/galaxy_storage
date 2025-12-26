@@ -1,0 +1,19 @@
+<?php
+$host = "db.ajibakkrxavmyzyolbbw.supabase.co";
+$user = "postgres";
+$pass = "adm227WK96QR";
+$db   = "postgres";
+$port = "5432";
+
+$conn = pg_connect("
+  host=$host
+  dbname=$db
+  user=$user
+  password=$pass
+  port=$port
+");
+
+if (!$conn) {
+  die("Koneksi Supabase gagal");
+}
+?>
